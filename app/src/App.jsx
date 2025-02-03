@@ -36,13 +36,13 @@ function App() {
 
   return (
     <div className="App">
-      <h1>Text Analysis Dashboard</h1>
+      <h1>ai text analysis mockup</h1>
       
       <div className="input-section">
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Enter text to analyze..."
+          placeholder="Enter text..."
           rows="5"
         />
         <button onClick={analyzeText} disabled={loading}>
