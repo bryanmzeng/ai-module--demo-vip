@@ -16,11 +16,11 @@ def analyze_metrics(text):
     # Generate mock scores for different metrics (replace with actual model inferences)
     # These are example metrics - modify as needed
     return {
-        "social_level": np.clip(abs(ord(text[0]) % 100 - 50)/50 + np.random.normal(0, 0.1), 0, 1),
-        "communication_style": sentiment_result['score'] * 0.8 + 0.2,
+        "social_level": sentiment_result['score'] * 2,
+        "communication_style": sentiment_result['score'] * 1.5,
         "emotional_tone": sentiment_result['score'],
-        "confidence_score": 1 - (abs(np.random.normal(0.5, 0.2))),
-        "positivity": sentiment_result['score'] if sentiment_result['label'] == 'POSITIVE' else 1 - sentiment_result['score'],
+        "confidence_score": sentiment_result['score'] * 0.5,
+        "positivity": sentiment_result['score'] if sentiment_result['label'] == 'POSITIVE' else 0,
         "sentiment_label": sentiment_result['label'],
         "sentiment_score": sentiment_result['score']
     }
