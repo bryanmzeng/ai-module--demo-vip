@@ -36,7 +36,7 @@ function App() {
 
   return (
     <div className="App">
-      <h1>ai text analysis mockup</h1>
+      <h1>AI Text Analysis</h1>
       
       <div className="input-section">
         <textarea
@@ -54,15 +54,19 @@ function App() {
         <div className="results-section">
           <h2>Analysis Results</h2>
           <div className="metrics-container">
-            <MetricBar label="Social Level" value={results.social_level} />
+            <MetricBar label="Social Awareness" value={results.social_awareness} />
             <MetricBar label="Communication Style" value={results.communication_style} />
-            <MetricBar label="Emotional Tone" value={results.emotional_tone} />
             <MetricBar label="Confidence Score" value={results.confidence_score} />
-            <MetricBar label="Positivity" value={results.positivity} />
+            <MetricBar label="Positivity Ratio" value={results.positivity_ratio} />
+            <MetricBar label="Toxicity Risk" value={results.toxicity_risk} />
+            <MetricBar label="Emotional Intelligence" value={results.emotional_intelligence} />
             
             <div className="sentiment-result">
-              <h3>Overall Sentiment: {results.sentiment_label}</h3>
-              <p>Confidence: {Math.round(results.sentiment_score * 100)}%</p>
+              <h3>Emotional Tone</h3>
+              <p>Primary Emotion: {results.emotional_tone.primary_emotion}</p>
+              <p>Emotion Confidence: {Math.round(results.emotional_tone.emotion_confidence * 100)}%</p>
+              <p>Sentiment: {results.emotional_tone.sentiment}</p>
+              <p>Sentiment Score: {Math.round(results.emotional_tone.sentiment_score * 100)}%</p>
             </div>
           </div>
         </div>
