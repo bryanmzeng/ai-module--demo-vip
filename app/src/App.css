@@ -40,3 +40,54 @@
 .read-the-docs {
   color: #888;
 }
+/* Add these styles to your existing CSS */
+.testing-metrics {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.model-versions, .inference-times, .text-statistics {
+  margin: 1rem 0;
+}
+
+.model-version, .time-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.3rem 0;
+}
+
+.confidence-section {
+  margin: 1rem 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.5rem;
+}
+
+.confidence-section h4 {
+  cursor: pointer;
+  margin: 0;
+  padding: 0.5rem;
+  background: #e9ecef;
+  border-radius: 4px;
+}
+
+.confidence-scores {
+  margin-top: 0.5rem;
+}
+
+.score-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.2rem 0;
+}
+
+.text-statistics p {
+  margin: 0.3rem 0;
+}
+
+.model-name {
+  font-weight: 500;
+  text-transform: capitalize;
+}

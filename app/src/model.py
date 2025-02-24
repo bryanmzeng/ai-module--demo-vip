@@ -1,49 +1,94 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from transformers import pipeline
-import numpy as np
+import time
 
 app = Flask(__name__)
 CORS(app)
 
-# Load multiple analysis models
-sentiment_analyzer = pipeline("sentiment-analysis")
-emotion_analyzer = pipeline("text-classification", model="bhadresh-savani/bert-base-uncased-emotion")
-formality_analyzer = pipeline("text-classification", model="s-nlp/roberta-base-formality-ranker")
+# Load models with detailed score returns
+sentiment_analyzer = pipeline("sentiment-analysis", return_all_scores=True)
+emotion_analyzer = pipeline("text-classification", model="bhadresh-savani/bert-base-uncased-emotion", return_all_scores=True)
+formality_analyzer = pipeline("text-classification", model="s-nlp/roberta-base-formality-ranker", return_all_scores=True)
 toxicity_analyzer = pipeline("text-classification", model="unitary/toxic-bert", return_all_scores=True)
-empathy_analyzer = pipeline("text-classification", model="michellejieli/emotion_text_classifier")
+empathy_analyzer = pipeline("text-classification", model="michellejieli/emotion_text_classifier", return_all_scores=True)
+
+def get_top_label(results):
+    """Helper to get the highest confidence label from results"""
+    return max(results, key=lambda x: x['score'])
 
 def analyze_metrics(text):
-    sentiment_result = sentiment_analyzer(text)[0]
+    # Initialize testing metrics collection
+    testing_metrics = {
+        "model_versions": {},
+        "inference_times": {},
+        "confidence_breakdown": {},
+        "text_statistics": {}
+    }
     
-    # emotion analysis - 6 basic emotions from model
-    emotion_result = emotion_analyzer(text)[0]
-    
-    # formality score: 0-1 where 1= most formal
-    formality_result = formality_analyzer(text)[0]
-    formality_score = formality_result['score'] if formality_result['label'] == 'formal' else 1 - formality_result['score']
-    
-    # toxicity analysis - toxicity of text
-    toxicity_scores = [item['score'] for item in toxicity_analyzer(text)[0]]
-    toxicity_score = max(toxicity_scores)
-    
-    # empathy/emotional awareness score
-    empathy_result = empathy_analyzer(text)[0]
-    empathy_score = empathy_result['score'] if empathy_result['label'] == 'empathy' else 1 - empathy_result['score']
+    # Text statistics
+    testing_metrics["text_statistics"] = {
+        "text_length": len(text),
+        "word_count": len(text.split()),
+        "estimated_tokens": len(sentiment_analyzer.tokenizer.tokenize(text))
+    }
+
+    # Sentiment analysis
+    start = time.time()
+    sentiment_results = sentiment_analyzer(text)[0]
+    testing_metrics["inference_times"]["sentiment"] = time.time() - start
+    sentiment_top = get_top_label(sentiment_results)
+    testing_metrics["confidence_breakdown"]["sentiment"] = sentiment_results
+    testing_metrics["model_versions"]["sentiment"] = sentiment_analyzer.model.config._name_or_path
+
+    # Emotion analysis
+    start = time.time()
+    emotion_results = emotion_analyzer(text)[0]
+    testing_metrics["inference_times"]["emotion"] = time.time() - start
+    emotion_top = get_top_label(emotion_results)
+    testing_metrics["confidence_breakdown"]["emotion"] = emotion_results
+    testing_metrics["model_versions"]["emotion"] = emotion_analyzer.model.config._name_or_path
+
+    # Formality analysis
+    start = time.time()
+    formality_results = formality_analyzer(text)[0]
+    testing_metrics["inference_times"]["formality"] = time.time() - start
+    formality_top = get_top_label(formality_results)
+    formality_score = formality_top['score'] if formality_top['label'] == 'formal' else 1 - formality_top['score']
+    testing_metrics["confidence_breakdown"]["formality"] = formality_results
+    testing_metrics["model_versions"]["formality"] = formality_analyzer.model.config._name_or_path
+
+    # Toxicity analysis
+    start = time.time()
+    toxicity_results = toxicity_analyzer(text)[0]
+    testing_metrics["inference_times"]["toxicity"] = time.time() - start
+    toxicity_score = max(item['score'] for item in toxicity_results)
+    testing_metrics["confidence_breakdown"]["toxicity"] = toxicity_results
+    testing_metrics["model_versions"]["toxicity"] = toxicity_analyzer.model.config._name_or_path
+
+    # Empathy analysis (Note: Verify model labels match your use case)
+    start = time.time()
+    empathy_results = empathy_analyzer(text)[0]
+    testing_metrics["inference_times"]["empathy"] = time.time() - start
+    empathy_top = get_top_label(empathy_results)
+    empathy_score = empathy_top['score'] if empathy_top['label'] == 'empathy' else 1 - empathy_top['score']
+    testing_metrics["confidence_breakdown"]["empathy"] = empathy_results
+    testing_metrics["model_versions"]["empathy"] = empathy_analyzer.model.config._name_or_path
 
     return {
         "social_awareness": formality_score,
         "communication_style": empathy_score,
         "emotional_tone": {
-            "primary_emotion": emotion_result['label'],
-            "emotion_confidence": emotion_result['score'],
-            "sentiment": sentiment_result['label'],
-            "sentiment_score": sentiment_result['score']
+            "primary_emotion": emotion_top['label'],
+            "emotion_confidence": emotion_top['score'],
+            "sentiment": sentiment_top['label'],
+            "sentiment_score": sentiment_top['score']
         },
-        "confidence_score": 1 - toxicity_score,  # Inverse of toxicity as confidence proxy- will connect to model in future version
-        "positivity_ratio": sentiment_result['score'] if sentiment_result['label'] == 'POSITIVE' else 1 - sentiment_result['score'],
+        "confidence_score": 1 - toxicity_score,
+        "positivity_ratio": sentiment_top['score'] if sentiment_top['label'] == 'POSITIVE' else 1 - sentiment_top['score'],
         "toxicity_risk": toxicity_score,
-        "emotional_intelligence": empathy_score * formality_score
+        "emotional_intelligence": empathy_score * formality_score,
+        "testing_metrics": testing_metrics
     }
 
 @app.route('/analyze', methods=['POST'])
