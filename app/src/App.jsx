@@ -236,6 +236,61 @@ function App() {
     ));
   };
 
+  // New function to render MBTI prediction results
+  const renderMBTIPrediction = () => {
+    if (!results?.personality) return null;
+    
+    const personality = results.personality;
+    
+    return (
+      <div className="mbti-prediction">
+        <h3>Personality Type</h3>
+        <div className="mbti-result">
+          <div className="mbti-type">
+            <span className="mbti-code">{personality.mbti_type}</span>
+            <span className="mbti-name">{personality.type_name}</span>
+          </div>
+          <div className="mbti-confidence">
+            <span>Confidence: {Math.round(personality.confidence * 100)}%</span>
+          </div>
+        </div>
+        
+        <div className="mbti-dimensions">
+          <h4>Personality Dimensions</h4>
+          <div className="dimensions-container">
+            {Object.entries(personality.dimension_explanations).map(([dimension, explanation]) => (
+              <div key={dimension} className="dimension-item">
+                <div className="dimension-label">{dimension}</div>
+                <div className="dimension-explanation">{explanation}</div>
+                <div className="dimension-confidence">
+                  <div className="mini-bar" style={{ 
+                    width: `${personality.dimension_confidence[dimension] * 100}%`,
+                    backgroundColor: personality.dimension_confidence[dimension] > 0.7 ? '#4CAF50' : 
+                                    personality.dimension_confidence[dimension] > 0.4 ? '#FFC107' : '#f44336'
+                  }}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <div className="mbti-scores">
+          <h4>Dimension Scores</h4>
+          <div className="dimension-scores">
+            <MetricBar label="Extraversion (E)" value={personality.dimension_scores.extraversion_score} />
+            <MetricBar label="Intuition (N)" value={personality.dimension_scores.intuition_score} />
+            <MetricBar label="Feeling (F)" value={personality.dimension_scores.feeling_score} />
+            <MetricBar label="Judging (J)" value={personality.dimension_scores.judging_score} />
+          </div>
+        </div>
+        
+        <div className="mbti-disclaimer">
+          <p>{personality.disclaimer}</p>
+        </div>
+      </div>
+    );
+  };
+
   const renderComplexityFeedback = () => {
     if (!complexityFeedback) return null;
     
@@ -346,6 +401,9 @@ function App() {
           <h2>Analysis Results</h2>
           
           <div className="metrics-container">
+            {/* New MBTI Prediction Section */}
+            {renderMBTIPrediction()}
+            
             {/* Existing metrics */}
             <MetricBar label="Social Awareness" value={results.social_awareness} />
             <MetricBar label="Communication Style" value={results.communication_style} />
